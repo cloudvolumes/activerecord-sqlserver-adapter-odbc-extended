@@ -5,6 +5,9 @@ module ActiveRecord
     module SQLServer
       module CoreExt
         module ODBC
+          # Adds helper methods for handling ODBC statement objects.
+          # Provides a safe implementation of +finished?+ to check
+          # connection state and handle ODBC errors gracefully.
           module Statement
             def finished?
               connected?
@@ -14,6 +17,9 @@ module ActiveRecord
             end
           end
 
+          # Adds helper methods for ODBC database operations.
+          # Wraps execution blocks to ensure statement handles are
+          # properly released after use, preventing connection leaks.
           module Database
             def run_block(*args)
               sth = run(*args)
@@ -21,7 +27,7 @@ module ActiveRecord
               begin
                 yield sth
               ensure
-                sth.drop if sth && sth.connected?
+                sth.drop if sth&.connected?
               end
             end
           end

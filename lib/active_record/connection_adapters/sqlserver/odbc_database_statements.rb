@@ -3,7 +3,6 @@
 module ActiveRecord
   module ConnectionAdapters
     module SQLServer
-
       # Removes default SQL Server implementations of +exec_update+ and +exec_delete+
       # so they can be replaced by ODBC-specific versions.
       # Otherwise, when calling +super+ from the OdbcDatabaseStatements module,
@@ -24,9 +23,7 @@ module ActiveRecord
       # When included, this module replaces the default TinyTDS-based methods
       # removed from +DatabaseStatements+, ensuring correct behavior for ODBC
       # connections and allowing +super+ calls without invoking the removed methods.
-      #
       module OdbcDatabaseStatements
-
         def affected_rows(raw_result)
           return if raw_result.blank?
 
@@ -90,9 +87,9 @@ module ActiveRecord
 
                     <<-SQL.strip_heredoc
                       SET NOCOUNT ON
-                      DECLARE @ssaIdInsertTable table (#{pk_and_types.map { |pk_and_type| "#{pk_and_type[:quoted]} #{pk_and_type[:id_sql_type]}"}.join(", ") });
-                      #{sql.dup.insert sql.index(/ (DEFAULT )?VALUES/), " OUTPUT #{ pk_and_types.map { |pk_and_type| "INSERTED.#{pk_and_type[:quoted]}" }.join(", ")} INTO @ssaIdInsertTable"}
-                      SELECT #{pk_and_types.map {|pk_and_type| "CAST(#{pk_and_type[:quoted]} AS #{pk_and_type[:id_sql_type]}) #{pk_and_type[:quoted]}"}.join(", ")} FROM @ssaIdInsertTable;
+                      DECLARE @ssaIdInsertTable table (#{pk_and_types.map { |pk_and_type| "#{pk_and_type[:quoted]} #{pk_and_type[:id_sql_type]}" }.join(", ")});
+                      #{sql.dup.insert sql.index(/ (DEFAULT )?VALUES/), " OUTPUT #{pk_and_types.map { |pk_and_type| "INSERTED.#{pk_and_type[:quoted]}" }.join(", ")} INTO @ssaIdInsertTable"}
+                      SELECT #{pk_and_types.map { |pk_and_type| "CAST(#{pk_and_type[:quoted]} AS #{pk_and_type[:id_sql_type]}) #{pk_and_type[:quoted]}" }.join(", ")} FROM @ssaIdInsertTable;
                       SET NOCOUNT OFF
                     SQL
                   else
@@ -100,7 +97,8 @@ module ActiveRecord
 
                     if returning_columns.any?
                       returning_columns_statements = returning_columns.map { |c| " INSERTED.#{SQLServer::Utils.extract_identifiers(c).quoted}" }
-                      sql.dup.insert sql.index(/ (DEFAULT )?VALUES/i), " OUTPUT" + returning_columns_statements.join(",")
+                      sql.dup.insert sql.index(/ (DEFAULT )?VALUES/i),
+                                     " OUTPUT#{returning_columns_statements.join(",")}"
                     else
                       sql
                     end
@@ -122,9 +120,10 @@ module ActiveRecord
         # === SQLServer Specific ======================================== #
 
         def set_identity_insert(table_name, conn, enable)
-          internal_raw_execute("SET IDENTITY_INSERT #{table_name} #{enable ? 'ON' : 'OFF'}", conn, perform_do: true)
-        rescue Exception
-          raise ActiveRecordError, "IDENTITY_INSERT could not be turned #{enable ? 'ON' : 'OFF'} for table #{table_name}"
+          internal_raw_execute("SET IDENTITY_INSERT #{table_name} #{enable ? "ON" : "OFF"}", conn, perform_do: true)
+        rescue StandardError
+          raise ActiveRecordError,
+                "IDENTITY_INSERT could not be turned #{enable ? "ON" : "OFF"} for table #{table_name}"
         end
 
         def sp_executesql_sql_type(attr)
@@ -134,7 +133,8 @@ module ActiveRecord
 
             return type.sqlserver_type if type.respond_to?(:sqlserver_type)
 
-            if type.is_a?(ActiveRecord::Encryption::EncryptedAttributeType) && type.instance_variable_get(:@cast_type).respond_to?(:sqlserver_type)
+            if type.is_a?(ActiveRecord::Encryption::EncryptedAttributeType) &&
+               type.instance_variable_get(:@cast_type).respond_to?(:sqlserver_type)
               return type.instance_variable_get(:@cast_type).sqlserver_type
             end
           end
@@ -165,18 +165,9 @@ module ActiveRecord
         def handle_to_names_and_values(handle, options = {})
           @raw_connection.use_utc = ActiveRecord.default_timezone || :utc
 
-          if options[:ar_result]
-            columns = lowercase_schema_reflection ? handle.columns(true).map { |c| c.name.downcase } : handle.columns(true).map { |c| c.name }
-            rows = handle.fetch_all || []
-            ActiveRecord::Result.new(columns, rows)
-          else
-            case options[:fetch]
-            when :all
-              handle.each_hash || []
-            when :rows
-              handle.fetch_all || []
-            end
-          end
+          return build_ar_result(handle) if options[:ar_result]
+
+          fetch_handle_data(handle, options[:fetch])
         end
 
         def finish_statement_handle(handle)
@@ -194,6 +185,29 @@ module ActiveRecord
         end
 
         private
+
+        def build_ar_result(handle)
+          columns = extract_column_names(handle)
+          rows = handle.fetch_all || []
+          ActiveRecord::Result.new(columns, rows)
+        end
+
+        def extract_column_names(handle)
+          if lowercase_schema_reflection
+            handle.columns(true).map { |c| c.name.downcase }
+          else
+            handle.columns(true).map(&:name)
+          end
+        end
+
+        def fetch_handle_data(handle, fetch_mode)
+          case fetch_mode
+          when :all
+            handle.each_hash || []
+          when :rows
+            handle.fetch_all || []
+          end
+        end
 
         def execute_odbc_procedure(sql, conn)
           results = []

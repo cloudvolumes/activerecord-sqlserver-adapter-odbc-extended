@@ -2,9 +2,10 @@
 
 module ActiveRecord
   module ConnectionAdapters
+    # Extends the ActiveRecord SQL Server adapter with custom behavior
+    # and compatibility fixes for ODBC and SQL Server–specific features.
+    # Provides overrides for query execution, type casting, and schema handling.
     class SQLServerAdapter
-      undef :configure_connection
-
       class << self
         def new_client(config)
           case config[:mode].to_sym
@@ -21,6 +22,7 @@ module ActiveRecord
           TinyTds::Client.new(config)
         rescue TinyTds::Error => e
           raise ActiveRecord::NoDatabaseError if e.message.match(/database .* does not exist/i)
+
           raise e.message
         end
 
@@ -44,11 +46,12 @@ module ActiveRecord
           end.tap do |c|
             c.use_time = true
             c.use_utc = ActiveRecord.default_timezone || :utc
-          rescue Exception
+          rescue StandardError
             warn "Ruby ODBC v0.99992 or higher is required."
           end
         rescue ODBC::Error => e
           raise ActiveRecord::NoDatabaseError if e.message.match(/database .* does not exist/i)
+
           raise e.message
         end
       end
@@ -66,7 +69,6 @@ module ActiveRecord
 
         apply_mode_specific_behavior
       end
-
       # === Abstract Adapter (Connection Management) ================== #
 
       def active?
@@ -87,9 +89,17 @@ module ActiveRecord
       def reconnect
         case @connection_parameters[:mode].to_sym
         when :dblib
-          @raw_connection&.close rescue nil
+          begin
+            @raw_connection&.close
+          rescue StandardError
+            nil
+          end
         when :odbc
-          @raw_connection&.disconnect rescue nil
+          begin
+            @raw_connection&.disconnect
+          rescue StandardError
+            nil
+          end
         end
 
         @raw_connection = nil
@@ -104,9 +114,17 @@ module ActiveRecord
 
         case @connection_parameters[:mode].to_sym
         when :dblib
-          @raw_connection&.close rescue nil
+          begin
+            @raw_connection&.close
+          rescue StandardError
+            nil
+          end
         when :odbc
-          @raw_connection&.disconnect rescue nil
+          begin
+            @raw_connection&.disconnect
+          rescue StandardError
+            nil
+          end
         end
 
         @raw_connection = nil
