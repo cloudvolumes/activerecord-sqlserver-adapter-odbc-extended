@@ -19,21 +19,20 @@ Gem::Specification.new do |spec|
   spec.metadata["source_code_uri"] = "https://github.com/cloudvolumes/activerecord-sqlserver-adapter-odbc-extended/tree/v#{version}"
   spec.metadata["changelog_uri"]   = "https://github.com/cloudvolumes/activerecord-sqlserver-adapter-odbc-extended/blob/v#{version}/CHANGELOG.md"
 
-  # Specify which files should be added to the gem when it is released.
-  # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
-  gemspec = File.basename(__FILE__)
-  spec.files = IO.popen(%w[git ls-files -z], chdir: __dir__, err: IO::NULL) do |ls|
-    ls.readlines("\x0", chomp: true).reject do |f|
-      (f == gemspec) ||
-        f.start_with?(*%w[bin/ test/ spec/ features/ .git .github appveyor Gemfile])
-    end
-  end
-  spec.bindir = "exe"
-  spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
+  spec.files         = `git ls-files -z`.split("\x0")
+  spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
   spec.add_dependency "activerecord-sqlserver-adapter", "~> 8.0.0"
-  spec.add_dependency "ruby-odbc"
+
+  # Define Windows check (reuse your logic)
+  is_windows = [:mingw, :x64_mingw, :mswin, :x64_mingw_ucrt].include?(
+    RUBY_PLATFORM.gsub("-", "_").to_sym
+  )
+
+  if is_windows
+    spec.add_dependency "ruby-odbc"
+  end
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html

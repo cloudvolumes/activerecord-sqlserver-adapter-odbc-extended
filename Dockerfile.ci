@@ -1,0 +1,14 @@
+ARG TARGET_VERSION=3.2
+
+FROM mcr.microsoft.com/devcontainers/ruby:${TARGET_VERSION}
+
+ENV WORKDIR /activerecord-sqlserver-adapter-odbc-extended
+
+RUN mkdir -p $WORKDIR
+WORKDIR $WORKDIR
+
+COPY . $WORKDIR
+
+RUN bundle install --jobs `expr $(nproc) - 1` --retry 3
+
+CMD ["sh"]

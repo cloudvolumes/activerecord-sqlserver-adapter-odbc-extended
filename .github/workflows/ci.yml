@@ -1,0 +1,32 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Run test suite
+    runs-on: ubuntu-latest
+
+    env:
+      COMPOSE_FILE: compose.ci.yaml
+
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby:
+          - 3.4
+          - 3.2
+
+    steps:
+      - name: Print trigger info
+        run: echo "CI workflow triggered successfully!"
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies
+        run: docker compose build --no-cache --build-arg TARGET_VERSION=${{ matrix.ruby }}
+
+      - name: Run Lint
+        run: docker compose run ci bundle exec rubocop --parallel --format progress
+
