@@ -26,13 +26,11 @@ Gem::Specification.new do |spec|
   spec.add_dependency "activerecord-sqlserver-adapter", "~> 8.0.0"
 
   # Define Windows check (reuse your logic)
-  is_windows = [:mingw, :x64_mingw, :mswin, :x64_mingw_ucrt].include?(
+  is_windows = %i[mingw x64_mingw mswin x64_mingw_ucrt].include?(
     RUBY_PLATFORM.gsub("-", "_").to_sym
   )
 
-  if is_windows
-    spec.add_dependency "ruby-odbc"
-  end
+  spec.add_dependency "ruby-odbc" if is_windows
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html

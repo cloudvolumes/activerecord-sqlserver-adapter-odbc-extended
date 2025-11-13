@@ -1,5 +1,7 @@
 AllCops:
-  TargetRubyVersion: 3.2.0
+  TargetRubyVersion: 3.2.4
+  Exclude:
+    - 'test/**/*'
 
 Layout/LineLength:
   Max: 120
@@ -55,7 +57,7 @@ Metrics/MethodLength:
 
 Metrics/ModuleLength:
   Exclude:
-    - lib\active_record\connection_adapters\sqlserver\odbc_database_statements.rb
+    - lib/active_record/connection_adapters/sqlserver/odbc_database_statements.rb
 
 Metrics/PerceivedComplexity:
   Exclude:
