@@ -1,25 +1,12 @@
 # frozen_string_literal: true
 
 require "bundler/gem_tasks"
-require "minitest/test_task"
+require "rake/testtask"
+require_relative "test/support/paths_sqlserver"
+require_relative "test/support/rake_helpers"
 
-# Minitest::TestTask.create
-
-# require "rubocop/rake_task"
-
-# RuboCop::RakeTask.new
-
-# task default: %i[test rubocop]
-
-# frozen_string_literal: true
-
-# require "bundler/gem_tasks"
-# require "rake/testtask"
-# require_relative "test/support/paths_sqlserver"
-# require_relative "test/support/rake_helpers"
-
-task test: ["test:dblib"]
-task default: [:test]
+# Default task runs dblib tests
+task default: ["test:dblib"]
 
 namespace :test do
   %w[dblib odbc].each do |mode|
@@ -29,19 +16,18 @@ namespace :test do
       t.warning = !ENV["WARNING"].nil?
       t.verbose = false
     end
-  end
 
-  task "dblib:env" do
-    ENV["ARCONN"] = "dblib"
-  end
+    # Each mode’s env setup
+    task "#{mode}:env" do
+      ENV["ARCONN"] = mode
+    end
 
-  task "odbc:env" do
-    ENV["ARCONN"] = "odbc"
+    # Run tests after setting env
+    task mode => "#{mode}:env" do
+      Rake::Task[mode].invoke
+    end
   end
 end
-
-task "test:dblib" => "test:dblib:env"
-task "test:odbc" => "test:odbc:env"
 
 namespace :profile do
   %w[dblib odbc].each do |mode|
