@@ -17,7 +17,7 @@ end
 
 group :odbc do
   install_if -> { is_windows } do
-    gem "ruby-odbc", git: "https://github.com/cloudvolumes/ruby-odbc.git", tag: "0.103.cv"
+    gem "ruby-odbc-supported", "~> 1.0"
   end
 end
 

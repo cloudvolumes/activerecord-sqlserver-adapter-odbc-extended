@@ -30,8 +30,5 @@ Gem::Specification.new do |spec|
     RUBY_PLATFORM.gsub("-", "_").to_sym
   )
 
-  spec.add_dependency "ruby-odbc" if is_windows
-
-  # For more information and examples about making a new gem, check out our
-  # guide at: https://bundler.io/guides/creating_gem.html
+  spec.add_dependency "ruby-odbc-supported" if is_windows
 end
