@@ -1,8 +1,69 @@
 AllCops:
-  TargetRubyVersion: 3.0
+  TargetRubyVersion: 3.2.4
+  Exclude:
+    - 'test/**/*'
+
+Layout/LineLength:
+  Max: 120
+
+Naming/AccessorMethodName:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Max: 15
+
+Metrics/AbcSize:
+  Max: 25
+  Exclude:
+    - lib/active_record/connection_adapters/extended_sqlserver_adapter.rb
+    - lib/active_record/connection_adapters/sqlserver/odbc_database_statements.rb
+
+Naming/FileName:
+  Exclude:
+    - lib/activerecord-sqlserver-adapter-odbc-extended.rb
+
+Naming/MethodName:
+  IgnoredPatterns:
+    - visit_.*
+    - primary_Key_From_Table
+    - table_From_Statement
+    - distinct_One_As_One_Is_So_Not_Fetch
+    - make_Fetch_Possible_And_Deterministic
+
+Naming/MethodParameterName:
+  Enabled: false
+
+Naming/PredicatePrefix:
+  Enabled: false
 
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 
 Style/StringLiteralsInInterpolation:
   EnforcedStyle: double_quotes
+
+Style/ExplicitBlockArgument:
+  Exclude:
+    - lib/active_record/connection_adapters/sqlserver/odbc_database_statements.rb
+
+Metrics/ClassLength:
+  Exclude:
+    - lib/active_record/connection_adapters/extended_sqlserver_adapter.rb
+
+Metrics/MethodLength:
+  Exclude:
+    - lib/active_record/connection_adapters/extended_sqlserver_adapter.rb
+    - lib/active_record/connection_adapters/sqlserver/odbc_database_statements.rb
+
+Metrics/ModuleLength:
+  Exclude:
+    - lib/active_record/connection_adapters/sqlserver/odbc_database_statements.rb
+
+Metrics/PerceivedComplexity:
+  Exclude:
+    - lib/active_record/connection_adapters/sqlserver/odbc_database_statements.rb
+    - lib/active_record/connection_adapters/extended_sqlserver_adapter.rb
+
+Style/MultilineBlockChain:
+  Exclude:
+    - lib/active_record/connection_adapters/extended_sqlserver_adapter.rb
